@@ -10,7 +10,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-//한번 더 수정함
+//한번 더 수정함 
+//한번 더 수정함 
+//한번 더 수정함 
+ 
+
+
 @Controller 
 public class MemberDetailViewController { // MemberList.jsp에서 넘어옴
 	private static final String getPage = "MemberDetailView";
