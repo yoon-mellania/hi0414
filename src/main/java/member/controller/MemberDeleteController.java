@@ -17,12 +17,12 @@ public class MemberDeleteController { // MemberList.jsp에서 넘어옴
 	private static final String command = "/delete.me";
 
 	//이줄 추가됨
-	//이줄 추가됨
+	//이줄 추가됨  
 	
 	@Autowired
 	@Qualifier("myMemberDao")
 	private MemberDao memberDao;
-
+   
 /*delete 아직 미완성 => 잘 되는것 같은데.. */
 
 	@RequestMapping(value=command , method=RequestMethod.GET)
