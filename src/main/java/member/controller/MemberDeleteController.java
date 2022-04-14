@@ -16,6 +16,9 @@ public class MemberDeleteController { // MemberList.jsp에서 넘어옴
 	private static final String gotoPage =  "redirect:/list.me";
 	private static final String command = "/delete.me";
 
+	//이줄 추가됨
+	//이줄 추가됨
+	
 	@Autowired
 	@Qualifier("myMemberDao")
 	private MemberDao memberDao;
