@@ -19,7 +19,7 @@ public class MemberDeleteController { // MemberList.jsp에서 넘어옴
 	//이줄 추가됨
 	//이줄 추가됨  
 	//또 한줄 이줄 추가됨  
-	
+	   
 	@Autowired
 	@Qualifier("myMemberDao")
 	private MemberDao memberDao;
