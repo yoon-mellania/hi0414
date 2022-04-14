@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="member.model.Member">
+	<select id="GetDataList" resultType="MyMember" parameterType="hashmap">
+		select * from members		
+		<if test="whatColumn == 'name'">
+			where name like #{keyword}
+		</if>		
+		<if test="whatColumn == 'gender'">
+			where gender like #{keyword}
+		</if>	
+		order by id desc
+	</select>
+
+	<select id="GetTotalCount" resultType="int">
+		select count(*) from members
+		<if test="whatColumn == 'name'">
+			where name like #{keyword}
+		</if>		
+		<if test="whatColumn == 'gender'">
+			where gender like #{keyword}
+		</if>	
+	</select>
+
+	<insert id="InsertData" parameterType="MyMember">
+		insert into members(id, name, password, hiredate, gender, hobby, address1, address2, mpoint)
+		values( #{id}, #{name,jdbcType=VARCHAR}, #{password}, sysdate, #{gender},
+		#{hobby,jdbcType=VARCHAR}, #{address1,jdbcType=VARCHAR}, #{address2,jdbcType=VARCHAR}, #{mpoint})
+	</insert>
+	<!-- 윗줄에서 hiredate sysdate 넣어도 잘 되고, 안넣어도 오늘 날짜로 잘 들어간다. -->
+
+	<delete id="DeleteData" parameterType="MyMember"> <!-- parameterType="MyMember" 생략가능 -->  
+		delete from members
+		where
+		id=#{id}
+	</delete>
+	<!-- #{id}를 #{id32}로 해도 된다. -->
+
+	<update id="UpdateData" parameterType="MyMember">
+		update members set
+		name=#{name,jdbcType=VARCHAR}, password=#{password,jdbcType=VARCHAR}, gender=#{gender}, hobby=#{hobby,jdbcType=VARCHAR}
+		where id=#{id}
+	</update>
+	
+	 <!-- 위의 update에서 
+	 #{password,~를 gender로 쓰면 비번이 성별로 수정되고, 
+	 #{password3~ 의 형태로 쓰면 에러난다.
+	  -->
+	
+	<update id="UpdateData2" parameterType="MyMember">
+		update members set
+		mpoint = mpoint + #{mpoint} where id=#{id}
+	</update>
+	
+
+	<select id="GetData" resultType="MyMember">
+		select * from members 
+		where id = #{id} 
+	</select>
+	
+	<!-- 
+		위의 select에서는 where id = #{name}도 가능하지만,
+		아래의 select 에서는 where id = #{name}은 에러난다.
+		하나만 넘어오면 {}안에 아무값이나 넣어도 되고,
+		여러개가 묶음으로 넘어오면 정확히 일치해야 함( #{id}에는 getId()값이 넘어오는 듯함)
+	 -->
+	<!--  
+	<select id="GetDataMember" resultType="MyMember">
+		select * from members 
+		where id = #{id} 
+	</select>
+	 -->
+</mapper>
+
+

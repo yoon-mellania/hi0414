@@ -1,0 +1,136 @@
+-- 아래의 1번은 외래키 설정 안한것이고 저 아래의 2번은 외래키 설정한 것임(같은 테이블 사용함)
+---------------------------------------------------------------------
+--------------------------1(외래키 설정안한것)---------------------
+---------------------------------------------------------------------
+
+-- 부모 테이블(다른 테이블에 의해 참조되는 테이블)
+drop table department;
+create table department(
+dno number, -- 부모키(참조키):자식 테이블에서 참조하는 부모 테이블의 칼럼 primary key or unique로 설정되어 있어야 함
+dname varchar2(15)
+);
+
+-- 자식 테이블 ( 다른 테이블의 칼럼 값을 참조하는 테이블)
+drop table employee;
+create table employee(
+eno number,
+ename varchar2(10),
+dno number -- 외래키 : 부모 테이블의 칼럼 값을 참조하는 자식 테이블의 칼럼, 부모키와 자식키(외래키)는 칼럼명이 같아도 되고 달라도 된다.
+);
+
+-- 참조 무결성의 의미와 제약 조건 : 
+--사원 테이블의 부서번호는 부서테이블에서 참조가 가능해야 한다.
+--부서 테이블에 저장된 부서번호 중 하나와 일치하거나 NULL만 입력 가능
+
+insert into department values(10,'인사부');
+insert into department values(20,'영업부');
+insert into department values(30,'홍보부');
+
+insert into employee values(1,'kim',30);
+insert into employee values(2,'choi',10);
+insert into employee values(3,'hong',20);
+insert into employee values(4,'park',30);
+insert into employee values(5,'jung',60);
+
+commit;
+
+select * from department;
+select * from employee;
+
+
+---------------------------------------------------------------------
+------------------------2(외래키 설정한것)-------------------------
+---------------------------------------------------------------------
+
+-- 부모 테이블(다른 테이블에 의해 참조되는 테이블)
+-- 아래 테이블을 만든후 drop table department 만 쓰면 외래 키에 의해 참조되는 고유/기본 키가 테이블에 있습니다라고 뜬다.
+drop table department cascade constraints; --외래 키에 의해 참조되는 고유/기본 키가 테이블에 있을 때에는 cascade constraints를 써야 한다. 
+create table department(
+dno number, -- 부모키(참조키):자식 테이블에서 참조하는 부모 테이블의 칼럼 primary key or unique로 설정되어 있어야 함(설정 안해도 잘 되는것 같은데 삽입이 잘 되는데..=>다시 해보
+니 안됨)
+dname varchar2(15)
+);
+
+-- 부모 테이블의 부모키와 자식 테이블의 자식키(외래키)는 칼럼명이 같아도되고 달라도 된다.
+
+-- 자식 테이블 ( 다른 테이블의 칼럼 값을 참조하는 테이블)
+drop table employee;
+create table employee(
+eno number,
+ename varchar2(10),
+dno number references department(dno) -- 외래키 : 부모 테이블의 칼럼 값을 참조하는 자식 테이블의 칼럼, department의 dno를 primary key로 설정하지 않으면 ORA-02270: 이 열목록
+
+에 대해 일치하는 고유 또는 기본 키가 없습니다. 에러 뜬다. 
+);
+
+-----------------
+-- 아래의 department , employee 테이블은 위의 테이블에서 주석만 제거한 것임
+-----------------
+
+drop table department cascade constraints; 
+create table department(
+dno number primary key, 
+dname varchar2(15)
+);
+
+
+drop table employee;
+create table employee(
+eno number,
+ename varchar2(10),
+dno number references department(dno)  -- 여기
+);
+
+--위의 여기 부분에 아래 코드 하나씩 추가하고 실행히보자.
+--on delete cascade : 부모를 지우면 자식도 지워진다.
+--on delete set null : 부모를 지우면 자식의 해당 칼럼은 Null이 된다.
+-- '여기' 자리에 위의 on delete~~ 코드를 넣지 않으면 부모는 지워져도 자식은 그대로 남아있다.   
+
+-- 참조 무결성의 의미와 제약 조건 : 
+--사원 테이블의 부서번호는 부서테이블에서 참조가 가능해야 한다.
+--부서 테이블에 저장된 부서번호 중 하나와 일치하거나 NULL만 입력 가능
+
+insert into department values(10,'인사부');
+insert into department values(20,'영업부');
+insert into department values(30,'홍보부');
+
+insert into employee values(1,'kim',30);
+insert into employee values(2,'choi',10);
+insert into employee values(3,'hong',20);
+insert into employee values(4,'park',30);
+--insert into employee values(5,'jung',60); -- ORA-02291: 무결성 제약조건(JSPID.SYS_C006134)이 위배되었습니다- 부모 키가 없습니다
+insert into employee values(5,'jung',10);
+commit;
+
+select * from department;
+select * from employee;
+
+-- 아래 주석은 지우고 sql문장만 복사해서 실행해보자. 주석까지 블럭잡아 실행하면 에러난다. 
+delete from employee where eno=3; -- eno=3을 지우면 20번 영업부 직원이 한명도 없으니까 아래의 dno=20 삭제가 잘된다.
+delete from department where dno=20;
+
+위의 employee테이블의 dno칼럼을 아래처럼 설정하고 dno=30을 지우면 아래의 무결성 위배되었다는 메시지가 뜬다. 
+dno number references department(dno) 
+
+delete from employee where eno=4; -- eno=4 지워도 30번 홍보부 직원이 한명 있으니까 아래의 dno=20 삭제가 안되고 아래의 에러 메시지 뜬다. 
+delete from department where dno=30;
+
+ORA-02292: 무결성 제약조건(JSPID.SYS_C006143)이 위배되었습니다- 자식 레코드가 발견되었습니다
+
+
+
+
+
+위의 employee테이블의 dno칼럼을 아래처럼 설정하고 dno=30을 지우면 잘 지워지고 참조하고 있는 employee테이블의 dno가 30인 레코드도 모두 지워진다. 
+dno number references department(dno) on delete cascade
+
+delete from department where dno=30;
+
+
+
+위의 employee테이블의 dno칼럼을 아래처럼 설정하고 dno=30을 지우면 잘 지워지고 참조하고 있는 employee테이블의 dno가 30인 레코드의 dno칼럼에는 null이 들어간다. 
+dno number references department(dno) on delete set null
+delete from department where dno=30;
+
+
+

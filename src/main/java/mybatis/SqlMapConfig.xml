@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<!-- 마이바티스의 작동 규칙 정의 -->
+	<settings> 
+		<setting name="cacheEnabled" value="false" />
+		<setting name="useGeneratedKeys" value="false" />
+		<setting name="mapUnderscoreToCamelCase" value="true" />
+		<!-- <setting name="jdbcTypeForNull" value="NULL" /> --> <!-- 이 줄 추가하는 이유는 product.xml의 InsertData를 보자 --> 
+		<!-- 출처: http://yamea-guide.tistory.com/161 [기타치는 개발자의 야매 가이드] -->
+	</settings>
+	
+	<!-- 위의 <settings>~</settings> 까지 모두 생략 가능 -->
+	
+	<typeAliases>
+		<typeAlias alias="MyMember" type="member.model.Member"/>
+		<typeAlias alias="MyProduct" type="product.model.Product"/>
+		<typeAlias alias="MyOrder" type="order.model.Order"/>
+		<typeAlias alias="MyOrderDetail" type="orderdetail.model.OrderDetail"/>
+		<!-- <typeAlias alias="MyComposite" type="product.model.Composite"/> -->
+	</typeAliases>
+	
+	<!-- 위에서 별칭 설정을 하면 미리 별칭을 적용할 type에 작성한 패키지와 클래스가 있어야 한다. 
+	아래 mapper를 typeAliases 위에 쓰니까 에러난다.
+	mappers안에 <mapper resource="mybatis/product.xml"/> 하나만 넣어서 해봤는데,
+	typeAliases 위에 쓰니까 에러난다. 아래에 쓰자. 
+	-->
+	
+	
+	<mappers>
+		<mapper resource="mybatis/product.xml"/> 
+		<mapper resource="mybatis/member.xml"/>
+		<mapper resource="mybatis/order.xml"/> 
+		<mapper resource="mybatis/orderdetail.xml"/>
+		<mapper resource="mybatis/composite.xml"/>
+	</mappers>
+</configuration>
+
+

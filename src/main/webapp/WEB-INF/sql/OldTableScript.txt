@@ -1,0 +1,131 @@
+-- drop user jspid cascase ;
+-- create user jspid identified by jsppw account unlock ;
+-- grant connect, resource to jspid ; 
+
+-- 모든 제약 조건의 이름을 이용하여 제약 조건 삭제 구문 만들기 
+-- select 'alter table ' || table_name || ' drop constraint ' || constraint_name || ' ;' from user_constraints ;
+-------------------------------------------------------------------------------------
+-- 회원 테이블
+-------------------------------------------------------------------------------------
+drop table members purge ;
+
+-- mpoint : 고객 마일리지 적립을 위한 컬럼
+create table members(
+	id varchar2(10) primary key,
+	name varchar2(30),
+	password varchar2(30),
+	salary number,
+	hiredate date default sysdate,
+	gender varchar2(10),
+	hobby varchar2(30),
+	job varchar2(10),
+	zipcode varchar2(7),
+	address1 varchar2(30),
+	address2 varchar2(30),
+	mpoint number default 0
+) ;
+
+insert into members(id,name,password,salary,hiredate,gender,hobby,job,zipcode,address1,address2,mpoint)
+values('hong','홍길동','1234',100,sysdate,'남자','당구','학생','123-456','서울시 용산구','도원동',10);
+
+insert into members(id,name,password,salary,hiredate,gender,hobby,job,zipcode,address1,address2,mpoint)
+values('kim','김철수','1234',100,sysdate,'남자','당구','학생','123-456','서울시 용산구','도원동',10);
+
+
+insert into members(zipcode,id,name,password,salary,hiredate,gender,hobby)
+values('123-456','park','박영희','1234',100,sysdate,'여자','퀼트');
+
+commit ;
+-------------------------------------------------------------------------------------
+-- 주문 (매출) 테이블
+-------------------------------------------------------------------------------------
+drop sequence seqoid ;
+create sequence seqoid start with 1 increment by 1 nocache ;
+drop table orders purge ;
+
+-- orders : 주문 테이블
+-- orderdate : 주문 일자
+-- on delete set null : 회원이 탈퇴하더라도 매출 데이터는 남겨 둬야 한다.
+-- oid : 주문(송장) 번호, mid : 회원 번호, orderdate : 주문 일자
+create table orders(
+  oid number primary key,
+  mid varchar2(10) references members(id) on delete set null,
+  orderdate date default sysdate 
+);
+-------------------------------------------------------------------------------------
+-- 상품 테이블
+-------------------------------------------------------------------------------------
+
+drop table products purge ;
+
+create table products(
+	prodid number(5) primary key,
+	pname varchar2(20),
+	price number(20),
+	stock number(20) default 0 ,
+	description varchar2(255),
+	pictureurl varchar2(255)
+);
+
+drop sequence seqproducts;
+create  sequence seqproducts;
+
+begin
+	for i in 1..15 loop
+		insert into products 
+		values(seqproducts.nextval,'오렌지', 300,'호호호','lemon.jpg');
+	end loop;
+	
+	for i in 1..25 loop
+		insert into products 
+		values(seqproducts.nextval,'수박', 300,'하하하','suika.jpg');
+	end loop;
+	
+	for i in 1..35 loop
+		insert into products 
+		values(seqproducts.nextval,'메론', 300,'크크크','melon.jpg');
+	end loop;	
+	
+end ;
+/
+
+insert into products 
+values(seqproducts.nextval,'레몬', 300,'레몬에 포함되어 있는 쿠엔산은 피로회복에 좋습니다. 비타민C도 풍부합니다.','lemon.jpg');
+insert into products 
+values(seqproducts.nextval,'오렌지', 2000,'비타민C가 풍부합니다. 플래쉬 쥬스도 추천합니다.','orange.jpg');
+insert into products 
+values(seqproducts.nextval,'키위', 300,'비타민C가 매우 풍부합니다. 다이에트와 미용에도 매우 좋습니다.','kiui.jpg');
+insert into products 
+values(seqproducts.nextval,'파란사과', 500,'단맛이 강한 향기가 상큼한 파란 사과입니다.','aoringo.jpg');
+insert into products 
+values(seqproducts.nextval,'블루베리', 500,'블루베리에 포함된 anthocyanin(안토시아닌)은 눈피로에 효과가 있습니다.','blueberry.jpg');
+insert into products 
+values(seqproducts.nextval,'체리', 1000	,'체리는 맛이 단 성분이 많고 피로회복에 잘 듣습니다.','sakuranbo.jpg');
+insert into products 
+values(seqproducts.nextval,'메론', 1000	,'메론에는 비타민A와 칼륨이 많이 포함되어 있습니다.','melon.jpg');
+insert into products 
+values(seqproducts.nextval,'수박', 2000,'수분이 풍부한 작인 수박입니다.','suika.jpg');
+insert into products 
+values(seqproducts.nextval,'파인애플',2000, '비타민B1 비타민B2가 풍부합니다. 요리에도 사용할 수 있습니다.','pine.jpg');
+
+commit;
+
+------------------------------------------------------------------------------------------------------
+-- orderdetails : 주문 상세 테이블
+-------------------------------------------------------------------------------------
+-- on delete cascade : 삭제시 연쇄적으로 모든 데이터가 삭제
+-- 주문 취소가 발생하면 주문 상세 테이블도 연쇄적으로 삭제가 되어야 하므로 on delete cascade 옵션 사용
+-- drop  sequence seqodid ;
+create sequence seqodid start with 1 increment by 1 nocache ;
+
+-- pnum : 상품 번호, qty : 주문 수량
+drop table orderdetails purge ;
+
+create table orderdetails(
+  odid number primary key,
+  oid number references orders(oid) on delete cascade,
+  pnum number references products(prodid) on delete set null,
+  qty number
+);
+
+------------------------------------------------------------------------------------------------------

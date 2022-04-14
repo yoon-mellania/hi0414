@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="order.model.Order" >
+	<insert id="InsertData" parameterType="MyOrder">
+		insert into orders(oid, mid, orderdate)
+		values( seqoid.nextval, #{mid}, sysdate )
+	</insert>
+	
+	<select id="GetMaxOrderId" resultType="int">
+		select max(oid) as oid from orders
+	</select>
+	 <!-- 위에서 as oid 생략가능 as oid의 oid는 abc도 가능 -->
+</mapper>
+
+
+<!-- 
+  OID MID                  ORDERDAT
+   12 choi                 16/11/25
+   13 choi                 16/11/25
+   14 choi                 16/11/25
+   15 choi                 16/11/25
+   16 choi                 16/11/25
+-->
+

@@ -1,0 +1,245 @@
+-- select 'alter table ' || table_name || ' drop constraint ' || constraint_name || ' ; '  from  user_constraints
+-- where table_name in('PRODUCTS','MEMBERS','ORDERS','ORDERDETAILS', 'BOARDS');
+
+--테이블 전체를 복사,붙여넣기 하지 말고 하나씩 하나씩, 테이블 하나, 시퀀스 하나 이렇게 넣어야 에러없이 잘 된다. 
+
+-------------------------------------------------------------------------------------
+-- 회원 테이블
+-------------------------------------------------------------------------------------
+-- 추가 : DROP TABLE <삭제할 테이블명> CASCADE CONSTRAINTS;
+-- 추가2 :
+ DROP TABLE members CASCADE CONSTRAINTS;
+--members 테이블을 아래와 같이 그냥 삭제하면
+--외래 키에 의해 참조되는 고유/기본 키가 테이블에 있습니다라고 뜨니까
+--위의 추가2와 같이 지워야 한다.
+CASCADE CONSTRAINTS는 종속된 제약조건을 삭제한다는 뜻
+
+drop sequence seqmembers;
+create sequence seqmembers start with 1 increment by 1 nocache ;
+
+-- drop table members purge ;
+
+create table members(
+	id varchar2(10) primary key,
+	name varchar2(30),
+	password varchar2(30),
+	salary number,
+	hiredate date default sysdate,
+	gender varchar2(10),
+	hobby varchar2(70),
+	job varchar2(10),
+	zipcode varchar2(7),
+	address1 varchar2(30),
+	address2 varchar2(30),
+	mpoint number default 0
+) ;
+
+-------------------------------------------------------------------------------------
+-- DML(데이터 조작어) : insert, update, delete를 말한다.
+-- 트랜잭션(commit, rollback)이 가장 중요하다. 
+-------------------------------------------------------------------------------------
+
+-- 다시 김철수와 권지현을 추가하세요.
+insert into members(id,name,password,salary,hiredate,gender,hobby,job,zipcode)
+values('kim','김철수','1234',100,sysdate,'남자','게임','학생','123-456');
+
+insert into members(id,name,password,salary,hiredate,gender,hobby,job,zipcode)
+values('hong','홍길동','1234',100,sysdate,'남자','공부','학생','123-456');
+
+insert into members(id,name,password,salary,hiredate,gender,hobby,job,zipcode)
+values('park','권지현','1234',100,sysdate,'여자','마라톤,공부','학생','123-456');
+
+commit ;
+
+col id for a6
+col password for a8
+col name for a8
+col gender for a6
+col hobby for a15
+col address1 for a10
+col address2 for a10
+col job for a6
+select * from members;
+
+-------------------------------------------------------------------------------------
+-- 게시물 테이블
+-------------------------------------------------------------------------------------
+drop sequence myboard ;
+create sequence myboard start with 1 increment by 1 nocache ;
+drop table boards purge ;
+
+create table boards(
+	no number primary key,
+	subject varchar2(20) not null,
+	writer varchar2(20),
+	password varchar2(12) not null,
+	content varchar2(2048),
+	readhit number default 0,
+	regdate date default sysdate not null,
+	groupno number default 0,
+	orderno number default 0,
+	depth number default 0 
+);
+
+-- 일반적으로 회원이 탈퇴하게 되면 그 회원이 작성한 게시물은 삭제하지 않고 남겨 둬야 한다.
+-- 회원의 아이디가 사라지게 되므로 아이디에 해당하는 컬럼은 null이 되어야 한다.
+-- 이것을 위한 제약 조건을 다시 생성하도록 한다.
+-- on delete set null : 부모의 행이 삭제가 되는 경우 자식의 행의 값을 null으로 처리하는 옵션이다.
+alter table boards
+add constraint boards_mid_fk
+foreign key(writer) references members(id) on delete set null  ;
+
+-------------------------------------------------------------------------------------
+insert into boards 
+values(myboard.nextval, 'jsp어려워', 'hong', '1234', '정말 어려워요', default, default, default, default, default);
+
+insert into boards 
+values(myboard.nextval, '어떤 글', 'hong', '1234', '정말 호호호호호', default, default, default, default, default);
+
+insert into boards 
+values(myboard.nextval, '열공합시다', 'hong', '1234', '멍멍멍', default, default, default, default, default);
+
+insert into boards 
+values(myboard.nextval, '어떤 글', 'park', '1234', '정말 호호호호호', default, default, default, default, default);
+
+insert into boards 
+values(myboard.nextval, '열공합시다', 'park', '1234', '멍멍멍', default, default, default, default, default);
+commit ;
+  
+-------------------------------------------------------------------------------------
+-- 상품 테이블
+-------------------------------------------------------------------------------------
+drop sequence seqprod ;
+create sequence seqprod start with 1 increment by 1 nocache ;
+
+-- drop table products purge ; 이 코드로 테이블 삭제하면 ORA-02449: 외래 키에 의해 참조되는 고유/기본 키가 테이블에 있습니다 에러 뜨니까 아랫줄 사용해서 지운다.
+-- products를 참조하는 테이블이 있으면 products 테이블을 그냥 지울 수 없어서 아래의 코드로 지워야 한다.  
+-- 추가2 : 
+DROP TABLE products CASCADE CONSTRAINTS;
+
+-- name : 상품명, company : 제조 회사, image : 상품 이미지 
+-- stock : 재고 수량, point : 적립 포인트, inputdate : 입고 일자, category : 카테고리
+create table products(
+	num 		int primary key,
+	name 		varchar2(50) not null,	
+	company 	varchar2(50),
+	image   	varchar2(30),
+	stock		 int default 0,
+	price   	int default 0,
+	category   	varchar2(12),
+	contents 	varchar2(300),
+	point   	int default 0,
+	inputdate 	date default sysdate 
+);
+
+-------------------------------------------------------------------------------------
+insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+values(seqprod.nextval, '소보루', '샤니', 'smile.jpg', 100, 1000, 'bread', '맛있어요', 10, sysdate );		
+
+insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+values(seqprod.nextval, '크림빵', '샤넬', 'smile.jpg', 50, 2000, 'bread', '맛있어요', 20, sysdate );		
+
+insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+values(seqprod.nextval, '콜라', '코카', 'smile.jpg', 30, 3000, 'beverage', '탁쏩니다', 30, sysdate );
+
+insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+values(seqprod.nextval, '사이다', '칠성', 'smile.jpg', 40, 4000, 'beverage', '탁쏩니다', 40, sysdate );
+
+insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+values(seqprod.nextval, '환타', '코카', 'smile.jpg', 50, 5000, 'beverage', '탁쏩니다', 50, sysdate );
+
+insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+values(seqprod.nextval, '치킨', '네네', 'smile.jpg', 50, 5000, 'chicken', '맛없어요', 60, sysdate);	
+
+commit ;
+  
+-------------------------------------------------------------------------------------
+-- 주문 (매출) 테이블
+-------------------------------------------------------------------------------------
+drop sequence seqoid ;
+create sequence seqoid start with 1 increment by 1 nocache ;
+--drop table orders purge ; orderdetails 테이블에서 orders 테이블을 참조하므로 이 줄로는 삭제 안된다. 아랫줄 사용한다.
+-- 추가2 : 
+DROP TABLE orders CASCADE CONSTRAINTS;
+
+-- orders : 주문 테이블
+-- orderdate : 주문 일자
+-- on delete set null : 회원이 탈퇴하더라도 매출 데이터는 남겨 둬야 한다.
+-- oid : 주문(송장) 번호, mid : 회원 번호, orderdate : 주문 일자
+create table orders(
+  oid number primary key,
+  mid varchar2(10) references members(id) on delete set null,
+  orderdate date default sysdate 
+);
+부모 테이블(members인가?)에서 행을 업데이트 하거나 삭제하면 해당 외래 키를 구성하는 모든 값이 NULL로 설정된다.
+이 제약조건을 실행하려면 외래 키 열이 NULL을 허용해야 한다.(members의 id가 null을 허용해야 한다는 뜻인가? 
+members의 id는 primary key여서 null이면 안되는데..)
+아래와 같이 on delete set null이 없으면 회원 삭제할 때 에러난다. 
+--
+--create table orders(
+--  oid number primary key,
+--  mid varchar2(10) references members(id),
+--  orderdate date default sysdate 
+--);
+
+--
+-- 회원을 삭제하면 orders의 mid가 아래와 같이 null이 된다. 
+on delete set '아무개'(또는 아무개)로 하면 null이 아니라 아무개로 나오나?? => 누락된 NULL 키워드라고 에러뜬다.
+-- on delete set null이 없으면 회원 삭제했을 때 orders가 아래와 같이 안나오나? 어떻게 나오지?? => 삭제 버튼 클릭했을 때 에러뜬다. 
+--  OID 	MID        ORDERDAT
+--   12                16/11/25
+--   13                16/11/25
+--   14                16/11/25
+--   15                16/11/25
+--   16                16/11/25
+  
+  
+------------------------------------------------------------------------------------------------------
+-- orderdetails : 주문 상세 테이블
+-------------------------------------------------------------------------------------
+-- on delete cascade : 삭제시 연쇄적으로 모든 데이터가 삭제
+-- 주문 취소가 발생하면 주문 상세 테이블도 연쇄적으로 삭제가 되어야 하므로 on delete cascade 옵션 사용
+-- 상품이 삭제되도 주문 상세 테이블에는 남겨 둬야 한다. on delete set null
+drop sequence seqodid;
+create sequence seqodid start with 1 increment by 1 nocache ;
+
+-- oid : 주문번호,  pnum : 상품 번호,  qty : 주문 수량
+drop table orderdetails purge ;
+--drop table orderdetails CASCADE CONSTRAINTS;
+
+create table orderdetails(
+  odid number primary key,
+  oid number references orders(oid) on delete cascade,
+  pnum number references products(num) on delete set null,
+  qty number
+); 
+
+--oid는 foreign key로 주 테이블인 orders의 oid를 참조하고 있다.
+--foreign key설정은 테이블 만들 때 하는게 아니고 테이블 다 만들고나서
+--alter로 설정해준다.(위에서는 테이블 만들 때 하고 있는데...)
+
+-------------------------------------------------------------------------------------
+-- 페이징 처리를 위한 rank() over 함수 사용법
+-- 실습용 테이블 : boards
+-- 최근에 작성한 게시물이 가장 먼저 조회되게 해주세요.
+select * from boards order by no desc ; 
+
+-- 최근에 작성한 게시물 5건만 조회되게 해주세요.
+select no, subject, writer, ranking
+from 
+(
+	select no, subject, writer, rank() over( order by no desc ) as ranking
+	from boards 
+)
+where ranking <= 5   ; 
+
+-- 6위부터 10위까지 조회하기
+select no, subject, writer, password, content, readhit, regdate, groupno, orderno, depth, ranking
+from 
+(
+	select no, subject, writer, password, content, readhit, regdate, groupno, orderno, depth, rank() over( order by no desc ) as ranking
+	from boards 
+)
+where ranking between 6 and 10   ; 
+
+-------------------------------------------------------------------------------------

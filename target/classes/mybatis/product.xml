@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="product.model.Product">
+	<select id="GetDataList" resultType="MyProduct" parameterType="hashmap">
+		select * from products		
+		<if test="whatColumn == 'name'">
+			where name like #{keyword}
+		</if>		
+		<if test="whatColumn == 'contents'">
+			where contents like #{keyword}
+		</if>	
+		order by num desc
+	</select>
+<!-- resultType="MyProduct"를 안쓰면 에러난다. 꼭 쓰자. -->
+
+
+	<select id="GetTotalCount" resultType="int">
+		select count(*) from products
+		<if test="whatColumn == 'name'">
+			where name like #{keyword}
+		</if>		
+		<if test="whatColumn == 'contents'">
+			where contents like #{keyword}
+		</if>	
+	</select>
+
+	<insert id="InsertData" parameterType="MyProduct">
+		insert into products(num, name, company, image, stock, price, category, contents, point, inputdate)
+		values( seqprod.nextval, #{name,jdbcType=VARCHAR}, #{company}, #{image}, #{stock}, #{price},   
+		#{category,jdbcType=VARCHAR}, #{contents,jdbcType=VARCHAR}, #{point}, #{inputdate})
+	</insert>
+	
+	<!-- 
+	미리 삽입된 레코드에는 category가 있지만,
+	입력할 때에는 category가 없다. 그럴 때 category에 null이 들어가면 에러가 나는데,
+	전달되는 파라미터 값의 jdbcType이 무엇인지를 정해 주면 
+	쿼리는 자연스럽게 null로 변경되어 insert query가 수행된다.(물론 해당 column이 NULL값을 저장가능한 column 이어야 한다) 
+	지원하는 jdbcType은 아래와 같다.
+	BIT,FLOAT,CHAR,TIMESTAMP,OTHER,UNDEFINED,TINYINT,REAL,VARCHAR,BINARY,BLOB,NVARCHAR,SMALLINT
+	DOUBLE,LONGVARCHAR,VARBINARY,CLOB,NCHAR,INTEGER,NUMERIC,DATE,LONGVARBINARY,BOOLEAN,NCLOB
+	BIGINT,DECIMAL,TIME,NULL,CURSOR
+	
+	위 insert문에서는 #{category,jdbcType=VARCHAR}에만 jdbcType=VARCHAR를 쓰고 다른곳에는 지워도 된다.
+	#{point}를 #{point3}으로 하면 에러난다. 
+	
+	아래처럼 sql문 작성시 null 넣는 것은 아무 문제 없이 잘 되는데, 
+	mapper xml에서는 
+	테이블 만들 때 null가능하다고 했어도 null이 들어오면 
+	jdbcTypeForNull configuration property. Cause: java.sql.SQLException: 부적합한 열 유형: 이라는 에러메시지가 뜨니까
+	Null 허용의 의미로 jdbcType=VARCHAR을 적어야 한다.
+	SQL> insert into products(num,name,company)
+  		 values(seqprod.nextval,'1',null); 
+  
+  	모든 칼럼 마다 jdbcType=VARCHAR를 붙이기 싫으면
+  	SqlMapconfig.xml에 아래 코드 추가하면 된다.  => 아래 코드를 추가했을 때 number타입인 칼럼에는 뭐가 들어가지? 에러나나? 해보자.. 
+  	<setting name="jdbcTypeForNull" value="NULL" />
+  	
+  	위 sql문에서 category부분을 아예 빼도 되지 않을까? => 된다. 아래처럼 해도 되겠다.
+  	<insert id="InsertData" parameterType="MyProduct">
+		insert into products(num, name, company, image, stock, price, contents, point, inputdate)
+		values( seqprod.nextval, #{name}, #{company}, #{image}, #{stock}, #{price},   
+		 #{contents}, #{point}, #{inputdate})
+	</insert>
+	
+	-->
+	
+	
+	
+	<delete id="DeleteData" parameterType="MyProduct">
+		delete from products
+		where num=#{num}
+	</delete>
+
+	
+	<update id="UpdateData" parameterType="MyProduct">
+		update products set
+		name=#{name}, company=#{company}, image=#{image}, stock=#{stock}, price=#{price}, 
+		category=#{category,jdbcType=VARCHAR},contents=#{contents}, 
+		point=#{point}, inputdate=#{inputdate,jdbcType=VARCHAR}
+		where num=#{num}
+	</update>
+	<!-- 
+	수정할 때에는 입고일자는 입력을 안한다. 
+	그런데, 위 sql문에서 ,jdbcType=VARCHAR를 넣어서
+	기본 null값으로 들어간다. 처음 입력하면 날짜가 들어가는데 수정 할 때에는 날짜가 form에 없어서 넘어가지 않는다.
+	그래서 넘어가지 않는값은 null로 채워진다.
+	 inputdate=#{inputdate,jdbcType=VARCHAR} 를 아예 안쓰면 기존 날짜가 그대로 유지된다. 
+	jdbcType=VARCHAR를 안넣으면?? =>부적합한 열 유형이라는 에러 뜬다. 
+	-->
+	
+	<update id="UpdateData2" parameterType="MyProduct">
+		update products set
+		stock = stock - #{stock}
+		where num=#{num}
+	</update>	
+	
+
+	<select id="GetData" resultType="MyProduct">
+		select * from products 
+		where num = #{num}
+	</select>
+	<!-- id="GetData" : 상세보기 할 때 필요 
+	resultType="MyProduct"을 안쓰면 에러난다. 꼭 쓰자.
+	-->
+	
+	<select id="GetStock" parameterType="MyProduct" resultType="int">
+		select stock from products 
+		where num = #{num}
+	</select>
+</mapper>
+

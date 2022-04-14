@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="orderdetail.model.OrderDetail">	  
+	<insert id="InsertData" parameterType="MyOrderDetail">
+		insert into orderdetails(odid, oid, pnum, qty)
+		values( seqodid.nextval, #{oid}, #{pnum}, #{qty} )
+	</insert>	
+	<!-- 주문한 상품 갯수만큼 InsertData가 실행된다. -->
+	
+</mapper>

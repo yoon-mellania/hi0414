@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="product.model.Composite">	  
+	<select id="JoinGet3Way" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select m.name, p.pname, p.price, o.qty, p.price * o.qty as amount  
+		from (members m inner join orders o
+		on m.name = o.name) inner join products p 
+		on o.pno = p.pno 
+	</select>
+	<select id="OrderMall" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select m.id mid, o.oid, to_char(o.orderdate, 'yyyy/MM/dd hh24:mi') as orderdate
+		from  members m inner join orders o
+		on m.id=o.mid and m.id=#{mid} 
+		order by o.oid desc 
+	</select>
+	<!-- 위의 조인한 결과가 orders에 이미 들어가 있으니까
+	select * from orders order by oid desc 
+	이렇게 해도 되지 않을까???
+	-->
+	 
+	<!-- 회원 아이디 넘어옴 -->
+	<select id="OrderMall2"  parameterType="String" resultType="MyOrder">
+		select * from  orders where mid=#{id} 
+		order by oid desc  
+		<!--   
+		parameterType="String" 생략가능
+		orders 테이블의 구조:
+		oid : 주문(송장) 번호, mid : 회원 ID, orderdate : 주문 일자
+		mid=#{ddd32323} 또는 mid=#{12} 이런식으로 값 자리에 아무것이나 넣어도 된다. 
+		아무값이나 넣어도 되지만 꼭 id값이 넘어와야 한다. loginfo.getPasswd()를 넘기면 안됨
+		넘어오는 값은 
+		loginfo 가 넘어와도 loginfo.getId()가 넘어와도 
+		parameterType="String" , parameterType="MyOrder" 모두 사용 가능함
+		-->
+		<!-- 아래 코드는 날짜만 가져오는 방법 -->
+		<!-- select oid,mid,TO_CHAR(orderdate, 'YYYY-MM-DD') as orderdate from  orders where mid=#{id}  -->
+	</select>
+	
+	<select id="ShowDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select p.num pnum, p.name pname, od.qty, p.price, p.price * od.qty as amount 
+		from ( orders o inner join orderdetails od 
+		on o.oid=od.oid ) inner join products p
+		on od.pnum = p.num and o.oid=#{oid} 
+		order by od.odid desc 
+	</select>
+	
+	
+	<!-- <select id="ShowDetail2" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select p.num pnum, p.name pname, od.qty, p.price, p.price * od.qty as amount 
+		from  orderdetails od 	inner join products p
+		on od.pnum = p.num and od.oid=#{oid} 
+		order by od.odid desc 
+	</select> 
+	 -->
+	<!-- parameterType생략가능, resultType 생략하면 에러남, 
+	java.util.HashMap에서 java.util. 생략하고 HashMap만 써도 된다.  parameterType과 resultType 모두.. 
+	#{oid}에 다른 글자 넣으면 안됨 , #{oida} 에러남,
+	앞에 CompositeDao에서 map.put("oida", pmkey ) 로 설정해도 안됨,
+	put()에도 꼭 oid를 넣어야 하고 여기 xml에서도 꼭 #{oid}로 해야한다. 
+	위의 실행결과를 담을 수 있는 Bean이 없다. 그래서 HashMap 형태로 보낸다. 
+	-->
+	
+	<!-- 
+	od.oid도 추가해봄 
+	select od.oid, p.num pnum, p.name pname, od.qty, p.price, p.price * od.qty as amount 
+	from  orderdetails od inner join products p
+	on od.pnum = p.num and od.oid=4 
+	order by od.odid desc ;
+ 	-->
+	
+	<!-- 
+	orderdetails:
+	odid number primary key,
+  	oid number references orders(oid) on delete cascade,
+  	pnum number references products(num) on delete set null,
+  	qty number
+  	
+  	orderdetails에는 상품명과 단가는 없어서 products와 join해서 상품명과 단가를 가져와야 한다. 
+  	 -->
+  	 
+  	 <select id="ShowDetail2" parameterType="java.util.HashMap" resultType="mall.cart.ShoppingInfo">
+		select p.num pnum, p.name pname, od.qty, p.price , p.price * od.qty as amount 
+		from  orderdetails od 	inner join products p
+		on od.pnum = p.num and od.oid=#{oid} 
+		order by od.odid desc 
+	</select> 
+	<!-- 
+	위의 select한 결과는 mall.cart.ShoppingInfo 객체로 만들어지면서  ShoppingInfo 클래스의 pnum,pname,qty,price,amount에 setter 메서드 통해서 들어간다.
+	그래서 ShoppingInfo의 pnum 에 들어갈수 있도록 위의 칼럼 별칭 설정 pnum으로 해야하고 
+	그래서 ShoppingInfo의 pname에 들어갈수 있도록 위의 칼럼 별칭 설정 pname으로 해야하고 
+	가격은 그냥 p.price로 하던가   p.price price로 해야한다. 별칭을  pprice로 하면 단가가 0으로 나온다.
+	select 순서는 상관없다.
+	select  p.name pname,p.num pnum,~~ 처럼 p.name을 먼저 가져와도 된다. 
+	
+	
+	mall.cart.ShoppingInfo의 qty를 oqty로 하고,
+	위의 select에서 od.qty를 od.qty oqty로 별칭설정하면 왜 안되지?
+	p.num pnum, p.name pname 별칭 설정하는 건 잘되는데..
+	
+	 -->
+	
+	
+  	<!--  위의 ShowDetail2로 map을 넘겨받아 처리해도 되고,
+  	 아래의 ShowDetail3으로 oid값 하나만 넘겨받아 처리해도 된다. -->
+  	 
+  	 <!-- 
+  	 <select id="ShowDetail3"  resultType="java.util.HashMap">
+		select p.num pnum, p.name pname, od.qty, p.price, p.price * od.qty as amount 
+		from  orderdetails od 	inner join products p
+		on od.pnum = p.num and od.oid=#{oid} 
+		order by od.odid desc 
+	</select> 
+	 -->
+ <!--  	
+ col pname for a10
+ select p.num pnum, p.name pname, od.qty, p.price, p.price * od.qty as amount 
+		from  orderdetails od 	inner join products p
+		on od.pnum = p.num 
+		order by od.odid desc; 
+		
+	 SQL> select * from orderdetails;
+
+      ODID        OID       PNUM        QTY
+        10          7          8          1
+        11          7          9          1
+        12          7                     1
+        16         11          7          1
+        17         11          9          1
+        18         12          8          1
+      
+      SQL> select num, name,price from products;
+
+       NUM NAME            PRICE
+         8 남성정장        			 5000
+         7 초록사과        		 	 5000
+         9 여성정장        		 	 5000
+        15 빨간사과         		 	 500
+     -->
+     
+   <!--   아래 ShowDetail3과 같이 결과를 MyProduct로 해도 되는데..
+     product.model.Product에 있는 변수이름으로 작성해야 한다.
+     product.model.Product의 변수 이름이 num,name이니까
+     ShopResult.jsp에서 ${result.name}으로 출력해야 한다. 
+     여기 mapper 화일에서 p.name pname으로 해도 ShopResult.jsp에서 ${result.name}으로 해야한다.
+     num, qty, amount 모두 그렇다.-->
+     
+      <select id="ShowDetail3" parameterType="java.util.HashMap" resultType="MyProduct">
+		select p.num pnum, p.name pname, od.qty orderqty, p.price , p.price * od.qty as amount 
+		from  orderdetails od 	inner join products p
+		on od.pnum = p.num and od.oid=#{oid} 
+		order by od.odid desc 
+	</select> 
+	
+</mapper>
+
+
